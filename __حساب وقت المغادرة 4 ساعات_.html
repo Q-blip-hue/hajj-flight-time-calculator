@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جدول مواعيد رحلات الحج</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Tajawal',sans-serif;background:#0f1a35;min-height:100vh;padding:28px 16px;direction:rtl}
+.wrap{max-width:720px;margin:0 auto}
+.header{text-align:center;margin-bottom:28px}
+.header h1{color:#fff;font-size:22px;font-weight:700;margin-bottom:6px}
+.header p{color:#8899bb;font-size:13px}
+.card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 60px #00000055}
+.tabs{display:flex;background:#f0f4ff}
+.tab{flex:1;padding:13px 10px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:#888;font-family:'Tajawal',sans-serif;border-bottom:3px solid transparent;transition:all .2s}
+.tab.active{background:#fff;color:#1a5276;border-bottom-color:#2e86c1}
+.tab.active.jed{color:#1e8449;border-bottom-color:#1e8449}
+.body{padding:24px 20px}
+.section-title{font-size:13px;color:#666;font-weight:600;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{font-size:12px;color:#777;display:block;margin-bottom:6px;font-weight:600}
+.field input,.field select{width:100%;padding:10px 12px;border-radius:10px;border:2px solid #e8edf5;font-size:14px;font-family:'Tajawal',sans-serif;color:#1a1a2e;outline:none;background:#fff;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:#2e86c1}
+.time-row{display:flex;gap:6px}
+.time-row select{flex:1}
+.day-box{padding:10px 12px;border-radius:10px;border:2px solid #e8edf5;background:#f8faff;font-size:14px;font-weight:700;color:#1a5276;text-align:center;min-height:42px;display:flex;align-items:center;justify-content:center}
+.result-section{background:#f8fff8;border-radius:14px;padding:18px;border:1.5px solid #d5f5e3;margin-top:4px}
+.result-title{font-size:13px;color:#1e8449;font-weight:600;margin-bottom:12px}
+.result-val{padding:11px 14px;border-radius:10px;border:1.5px solid #d5f5e3;background:#fff;font-size:13px;font-weight:700;color:#1a5276;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;letter-spacing:.3px;word-break:break-word}
+.result-val.green{color:#1e8449;border-color:#a9dfbf}
+.result-val.empty{color:#bbb;font-weight:400;font-style:italic;font-size:12px}
+.note{margin-top:12px;font-size:11px;color:#888;background:#fffde7;padding:8px 12px;border-radius:8px;border-right:3px solid #f0c040;line-height:1.6}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.btn-reset{padding:9px 18px;border-radius:9px;border:1.5px solid #ddd;background:#fff;color:#666;font-size:13px;font-family:'Tajawal',sans-serif;cursor:pointer;font-weight:500}
+.btn-export{padding:9px 20px;border-radius:9px;border:none;background:#1a5276;color:#fff;font-size:13px;font-family:'Tajawal',sans-serif;cursor:pointer;font-weight:700}
+.btn-export:hover{background:#154360}
+.footer{text-align:center;color:#556;font-size:11px;margin-top:14px}
+@media(max-width:520px){.grid3{grid-template-columns:1fr 1fr;}.grid3 .field:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>✈️ جدول مواعيد رحلات الحج</h1>
+    <p>أدخل بيانات الرحلة لحساب مواعيد الحافلات تلقائياً</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tab0" onclick="switchTab(0)">🕌 مطار المدينة المنورة</button>
+      <button class="tab" id="tab1" onclick="switchTab(1)">🌴 مطار جدة</button>
+    </div>
+
+    <div id="panel0" class="body">
+      <div class="section-title">بيانات الرحلة</div>
+      <div class="grid3">
+        <div class="field">
+          <label>يوم الرحلة</label>
+          <div class="day-box" id="day0">يُحسب تلقائياً</div>
+        </div>
+        <div class="field">
+          <label>📅 تاريخ الرحلة</label>
+          <input type="date" id="date0" onchange="calc(0)">
+        </div>
+        <div class="field">
+          <label>🕐 وقت الإقلاع</label>
+          <div class="time-row">
+            <select id="h0" onchange="calc(0)"><option value="">ساعة</option></select>
+            <select id="m0" onchange="calc(0)"><option value="">دقيقة</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="result-section">
+        <div class="result-title">🚌 النتائج</div>
+        <div class="grid2">
+          <div class="field">
+            <label>مغادرة الحافلات</label>
+            <div class="result-val empty" id="dep0">انتظر إدخال البيانات</div>
+          </div>
+          <div class="field">
+            <label>إنزال الحافلات</label>
+            <div class="result-val green empty" id="arr0">انتظر إدخال البيانات</div>
+          </div>
+        </div>
+        <div class="note">⚠️ مغادرة الحافلات = وقت الإقلاع − 3 ساعات &nbsp;|&nbsp; إنزال الحافلات = مغادرة الحافلات − 4 ساعات</div>
+      </div>
+      <div class="actions">
+        <button class="btn-reset" onclick="reset(0)">🔄 مسح</button>
+        <button class="btn-export" onclick="doExport(0)">📥 تحميل Excel</button>
+      </div>
+    </div>
+
+    <div id="panel1" class="body" style="display:none">
+      <div class="section-title">بيانات الرحلة</div>
+      <div class="grid3">
+        <div class="field">
+          <label>يوم الرحلة</label>
+          <div class="day-box" id="day1">يُحسب تلقائياً</div>
+        </div>
+        <div class="field">
+          <label>📅 تاريخ الرحلة</label>
+          <input type="date" id="date1" onchange="calc(1)">
+        </div>
+        <div class="field">
+          <label>🕐 وقت الإقلاع</label>
+          <div class="time-row">
+            <select id="h1" onchange="calc(1)"><option value="">ساعة</option></select>
+            <select id="m1" onchange="calc(1)"><option value="">دقيقة</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="result-section">
+        <div class="result-title">🚌 النتائج</div>
+        <div class="grid2">
+          <div class="field">
+            <label>مغادرة الحافلات</label>
+            <div class="result-val empty" id="dep1">انتظر إدخال البيانات</div>
+          </div>
+          <div class="field">
+            <label>إنزال الحافلات</label>
+            <div class="result-val green empty" id="arr1">انتظر إدخال البيانات</div>
+          </div>
+        </div>
+        <div class="note">⚠️ مغادرة الحافلات = وقت الإقلاع − 12 ساعة &nbsp;|&nbsp; إنزال الحافلات = مغادرة الحافلات − 4 ساعات</div>
+      </div>
+      <div class="actions">
+        <button class="btn-reset" onclick="reset(1)">🔄 مسح</button>
+        <button class="btn-export" onclick="doExport(1)">📥 تحميل Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">النتائج تراعي تغيير اليوم تلقائياً عند طرح الساعات</div>
+</div>
+
+<script>
+const DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const BUS_OFF=[3,12];
+
+(function init(){
+  [0,1].forEach(t=>{
+    const hs=document.getElementById('h'+t);
+    const ms=document.getElementById('m'+t);
+    for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.text=String(i).padStart(2,'0');hs.appendChild(o);}
+    for(let i=0;i<60;i++){const o=document.createElement('option');o.value=i;o.text=String(i).padStart(2,'0');ms.appendChild(o);}
+  });
+})();
+
+function switchTab(t){
+  [0,1].forEach(i=>{
+    const tb=document.getElementById('tab'+i);
+    tb.className='tab'+(i===t?' active'+(i===1?' jed':''):'');
+    document.getElementById('panel'+i).style.display=i===t?'':'none';
+  });
+}
+
+function fmt(dt){
+  const dy=DAYS[dt.getDay()];
+  const d=String(dt.getDate()).padStart(2,'0');
+  const m=String(dt.getMonth()+1).padStart(2,'0');
+  const y=dt.getFullYear();
+  const h=String(dt.getHours()).padStart(2,'0');
+  const mn=String(dt.getMinutes()).padStart(2,'0');
+  return dy+'   '+y+'/'+m+'/'+d+'   '+h+':'+mn;
+}
+
+function calc(t){
+  const dv=document.getElementById('date'+t).value;
+  const hv=document.getElementById('h'+t).value;
+  const mv=document.getElementById('m'+t).value;
+  const dayEl=document.getElementById('day'+t);
+  const depEl=document.getElementById('dep'+t);
+  const arrEl=document.getElementById('arr'+t);
+
+  if(!dv){dayEl.textContent='يُحسب تلقائياً';return;}
+  const [y,mo,d]=dv.split('-').map(Number);
+  const base=new Date(y,mo-1,d,hv===''?0:Number(hv),mv===''?0:Number(mv));
+  dayEl.textContent=DAYS[base.getDay()];
+  if(hv===''||mv===''){return;}
+
+  const busDep=new Date(base.getTime()-BUS_OFF[t]*3600000);
+  const busArr=new Date(busDep.getTime()-4*3600000);
+
+  depEl.textContent=fmt(busDep);
+  depEl.className='result-val';
+  arrEl.textContent=fmt(busArr);
+  arrEl.className='result-val green';
+}
+
+function reset(t){
+  document.getElementById('date'+t).value='';
+  document.getElementById('h'+t).value='';
+  document.getElementById('m'+t).value='';
+  document.getElementById('day'+t).textContent='يُحسب تلقائياً';
+  const d=document.getElementById('dep'+t);
+  const a=document.getElementById('arr'+t);
+  d.textContent='انتظر إدخال البيانات';d.className='result-val empty';
+  a.textContent='انتظر إدخال البيانات';a.className='result-val green empty';
+}
+
+function doExport(t){
+  const dv=document.getElementById('date'+t).value;
+  const hv=document.getElementById('h'+t).value;
+  const mv=document.getElementById('m'+t).value;
+  const dy=document.getElementById('day'+t).textContent;
+  const dep=document.getElementById('dep'+t).textContent;
+  const arr=document.getElementById('arr'+t).textContent;
+  const lbl=t===0?'مطار المدينة':'مطار جدة';
+  const tf=hv!==''&&mv!==''?String(hv).padStart(2,'0')+':'+String(mv).padStart(2,'0'):'';
+  const df=dv?dv.replace(/-/g,'/'):'';
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['يوم الرحلة','تاريخ الرحلة','وقت الإقلاع','مغادرة الحافلات','إنزال الحافلات'],
+    [dy,df,tf,dep,arr]
+  ]);
+  ws['!cols']=[{wch:14},{wch:14},{wch:14},{wch:32},{wch:32}];
+  XLSX.utils.book_append_sheet(wb,ws,lbl);
+  XLSX.writeFile(wb,'جدول_رحلات_'+lbl+'.xlsx');
+}
+</script>
+</body>
+</html>
